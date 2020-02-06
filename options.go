@@ -17,7 +17,7 @@
 package badger
 
 import (
-	"github.com/dgraph-io/badger/options"
+	"github.com/aergoio/badger/options"
 )
 
 // Note: If you add a new option X make sure you also add a WithX method on Options.

@@ -23,7 +23,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/dgraph-io/badger/pb"
+	"github.com/aergoio/badger/pb"
 )
 
 func TestPublisherOrdering(t *testing.T) {
