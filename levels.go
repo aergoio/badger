@@ -22,7 +22,9 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -114,10 +116,19 @@ func newLevelsController(db *DB, mf *Manifest) (*levelsController, error) {
 	tables := make([][]*table.Table, db.opt.MaxLevels)
 	var maxFileID uint64
 
-	// We found that using 3 goroutines allows disk throughput to be utilized to its max.
-	// Disk utilization is the main thing we should focus on, while trying to read the data. That's
-	// the one factor that remains constant between HDD and SSD.
-	throttle := y.NewThrottle(3)
+	maxDbOpenProcs := func(n int) int {
+		if s := os.Getenv("DB_MAX_OPEN_PROCS"); s != "" {
+			if v, err := strconv.Atoi(s); err == nil {
+				return v
+			}
+		}
+		return n
+	}
+
+	// For faster initialization, adjust the max number of go-routines opening SST files. The latter can be changed by
+	// setting the OS environment variable DB_MAX_OPEN_PROCS. In a machine with a 16 core processors, the default value
+	// is 16. This reduces about 25% of DB initialization time.
+	throttle := y.NewThrottle(maxDbOpenProcs(runtime.NumCPU()))
 
 	start := time.Now()
 	var numOpened int32
